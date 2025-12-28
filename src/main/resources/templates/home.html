@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/header :: head"></head>
+
+<body>
+
+<div th:replace="fragments/header :: body"></div>
+
+<div class="home-bg text-center d-flex flex-column justify-content-center align-items-center">
+    <h1 class="display-4">Welcome to EduPortal</h1>
+    <p class="lead">A modern school admission management system</p>
+    <a href="/register" class="btn btn-primary btn-lg">Get Started</a>
+</div>
+
+<div th:replace="fragments/footer :: body"></div>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: head"></head>
+
+<body>
+<div th:replace="fragments/header :: body"></div>
+
+<div class="card p-4 shadow mt-4">
+    <h2>Welcome, <span th:text="${user.firstName}"></span>!</h2>
+    <p>Email: <span th:text="${user.email}"></span></p>
+    <p>User Type: <span th:text="${user.type}"></span></p>
+	<a th:href="@{/profile}">Profile</a>
+</div>
+
+<div th:replace="fragments/footer :: body"></div>
+</body>
+</html>

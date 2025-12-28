@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/header :: head"></head>
+
+<body>
+<div th:replace="fragments/header :: body"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card p-4 shadow-lg border-0 rounded-4 text-center">
+
+                <img th:if="${user.profilePicture == null}"
+                     th:src="@{/images/profile.jpeg}"
+                     class="rounded-circle mb-3"
+                     width="150" height="150">
+
+                <img th:if="${user.profilePicture != null}"
+                     th:src="@{/uploads/{file}(file=${user.profilePicture})}"
+                     class="rounded-circle mb-3"
+                     width="150" height="150">
+
+                <h3 th:text="${user.firstName + ' ' + user.lastName}"></h3>
+                <hr>
+
+                <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+                <p><strong>Username:</strong> <span th:text="${user.username}"></span></p>
+                <p><strong>Gender:</strong> <span th:text="${user.gender}"></span></p>
+
+                <a th:href="@{/profile/edit}" class="btn btn-primary w-100 mt-3">
+                    Edit Profile
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments/footer :: body"></div>
+</body>
+
+</html>
