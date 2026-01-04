@@ -2,7 +2,6 @@ package com.admission.auth;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -33,14 +32,11 @@ public class AuthController {
 	@Autowired
 	private Authentication authentication;
 
-	private final List<String> userTypes = List.of(UserType.STUDENT.toString(), UserType.ADMIN.toString());
-
 	
 	@GetMapping("/register")
 	public String getRegisterPage(Model model) {
 		model.addAttribute("error", new ValidationError());
 		model.addAttribute("registerForm", new RegistrationForm());
-		model.addAttribute("userTypes", userTypes);
 		return "register.html";
 	}
 
@@ -51,15 +47,13 @@ public class AuthController {
 		if (form.getFirstName() == null || form.getFirstName().isBlank()) {
 			model.addAttribute("error", new ValidationError("First name cannot be empty"));
 			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
 		// DONE: Make sure email is valid
-		if (!Utilities.isValidEmail(form.getEmail())) {
+		if (form.getEmail() == null || form.getEmail().isBlank() || !Utilities.isValidEmail(form.getEmail())) {
 			model.addAttribute("error", new ValidationError("Please enter a valid email address"));
 			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
@@ -68,7 +62,6 @@ public class AuthController {
 			model.addAttribute("error", new ValidationError(
 					"Password should be at least 8 characters long and should contain at least one number and at least one uppercase letter"));
 			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
@@ -76,7 +69,6 @@ public class AuthController {
 		if (form.getConfirmPassword() == null || !form.getPassword().equals(form.getConfirmPassword())) {
 			model.addAttribute("error", new ValidationError("Password and confirm password do not match"));
 			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
@@ -85,7 +77,6 @@ public class AuthController {
 		if (userRepository.existsByEmail(form.getEmail())) {
 			model.addAttribute("error", new ValidationError("Email already exists"));
 			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
@@ -100,30 +91,33 @@ public class AuthController {
 		// DONE: store hash of the password
 		user.setPassword(passwordEncoder.encode(form.getPassword()));
 		
-		// Validate and set user type with exception handling
-		try {
-			user.setType(UserType.valueOf(form.getUserType()));
-		} catch (IllegalArgumentException e) {
-			model.addAttribute("error", new ValidationError("Invalid user type selected"));
-			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
-			return "register.html";
-		}
+		// Set default user type to STUDENT (admin is hardcoded in the system)
+		user.setType(UserType.STUDENT);
 		
 		user.setUsername(form.getEmail());
 		
 		// Validate and set gender with exception handling
+		if (form.getGender() == null || form.getGender().isBlank()) {
+			model.addAttribute("error", new ValidationError("Please select a gender"));
+			model.addAttribute("registerForm", form);
+			return "register.html";
+		}
 		try {
 			user.setGender(Gender.valueOf(form.getGender()));
 		} catch (IllegalArgumentException e) {
 			model.addAttribute("error", new ValidationError("Invalid gender selected"));
 			model.addAttribute("registerForm", form);
-			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
 		// DONE: Store the entity in db
-		userRepository.save(user);
+		try {
+			userRepository.save(user);
+		} catch (Exception e) {
+			model.addAttribute("error", new ValidationError("An error occurred while registering. Please try again."));
+			model.addAttribute("registerForm", form);
+			return "register.html";
+		}
 
 		// DONE: Send successful message and redirect to login page.
 		return "redirect:/login?registered=true";
