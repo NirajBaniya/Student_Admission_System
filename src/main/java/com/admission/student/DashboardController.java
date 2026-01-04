@@ -6,6 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.admission.auth.Authentication;
+import com.admission.college.College;
+import com.admission.college.CollegeRepository;
 import com.admission.user.User;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,19 +17,24 @@ public class DashboardController {
 
 	@Autowired
 	private Authentication authentication;
+	
+	@Autowired
+	private CollegeRepository collegeRepository;
 
 	@GetMapping("/dashboard")
 	public String getDashboard(HttpServletRequest request, Model model) {
-		// DONE: get user from cookie
-		// user verification
-		// user identification
+		
 		User user = authentication.authenticate(request);
 
 		if (user == null) {
 			return "redirect:/login";
 		}
 		
+		// Get the single college
+		College college = collegeRepository.getSingleCollege();
+		
 		model.addAttribute("user", user);
+		model.addAttribute("college", college);
 		
 		return "dashboard.html";
 	}

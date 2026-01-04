@@ -19,6 +19,7 @@ import com.admission.user.UserRepository;
 import com.admission.user.UserType;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
@@ -28,6 +29,9 @@ public class AuthController {
 
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private Authentication authentication;
 
 	private final List<String> userTypes = List.of(UserType.STUDENT.toString(), UserType.ADMIN.toString());
 
@@ -43,34 +47,45 @@ public class AuthController {
 	@PostMapping("/register")
 	public String registerUser(RegistrationForm form, Model model) {
 
-		System.out.println("Email:" + form.getEmail());
-		System.out.println("Password:" + form.getPassword());
-
 		// DONE: Make sure first name is not empty
-		if (form.getFirstName().isBlank()) {
-			// send "First name cannot be empty"
+		if (form.getFirstName() == null || form.getFirstName().isBlank()) {
 			model.addAttribute("error", new ValidationError("First name cannot be empty"));
 			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
-		// TODO: Make sure email is valid
+		// DONE: Make sure email is valid
+		if (!Utilities.isValidEmail(form.getEmail())) {
+			model.addAttribute("error", new ValidationError("Please enter a valid email address"));
+			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
+			return "register.html";
+		}
 
 		// DONE: Make sure password contains special character, number
-		if (!Utilities.isValidPassword(form.getPassword())) {
+		if (form.getPassword() == null || !Utilities.isValidPassword(form.getPassword())) {
 			model.addAttribute("error", new ValidationError(
 					"Password should be at least 8 characters long and should contain at least one number and at least one uppercase letter"));
 			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
-		// TODO: Make sure password & confirm password are equal
+		// DONE: Make sure password & confirm password are equal
+		if (form.getConfirmPassword() == null || !form.getPassword().equals(form.getConfirmPassword())) {
+			model.addAttribute("error", new ValidationError("Password and confirm password do not match"));
+			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
+			return "register.html";
+		}
 
 		// DONE: Make sure email is unique
 		// cannot be done in client side
 		if (userRepository.existsByEmail(form.getEmail())) {
 			model.addAttribute("error", new ValidationError("Email already exists"));
 			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
 			return "register.html";
 		}
 
@@ -84,16 +99,34 @@ public class AuthController {
 
 		// DONE: store hash of the password
 		user.setPassword(passwordEncoder.encode(form.getPassword()));
-		user.setType(UserType.valueOf(form.getUserType()));
+		
+		// Validate and set user type with exception handling
+		try {
+			user.setType(UserType.valueOf(form.getUserType()));
+		} catch (IllegalArgumentException e) {
+			model.addAttribute("error", new ValidationError("Invalid user type selected"));
+			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
+			return "register.html";
+		}
+		
 		user.setUsername(form.getEmail());
-		user.setGender(Gender.valueOf(form.getGender()));
+		
+		// Validate and set gender with exception handling
+		try {
+			user.setGender(Gender.valueOf(form.getGender()));
+		} catch (IllegalArgumentException e) {
+			model.addAttribute("error", new ValidationError("Invalid gender selected"));
+			model.addAttribute("registerForm", form);
+			model.addAttribute("userTypes", userTypes);
+			return "register.html";
+		}
 
 		// DONE: Store the entity in db
 		userRepository.save(user);
 
-		// TODO: Send successful message and redirect to login page.
-
-		return "redirect:/login";
+		// DONE: Send successful message and redirect to login page.
+		return "redirect:/login?registered=true";
 	}
 
 	@GetMapping("/login")
@@ -125,6 +158,9 @@ public class AuthController {
 		String sessionID = Utilities.getRandomString(20);
 		Cookie cookie = new Cookie("SESSIONID", sessionID);
 		cookie.setPath("/");
+		cookie.setHttpOnly(true); // Prevent XSS attacks
+		cookie.setSecure(true); // Only send over HTTPS
+		cookie.setMaxAge(7 * 24 * 60 * 60); // 7 days expiration
 		response.addCookie(cookie);
 		
 		// DONE: store created cookie in db
@@ -135,28 +171,37 @@ public class AuthController {
 		
 		
 		// DONE: redirect to dashboard
-		
-		System.out.println("Logged in as:" + user.getType());
-	
 		switch (user.getType()) {
 		case ADMIN:
 			return "redirect:/admin/dashboard";
 		default:
 			return "redirect:/dashboard";
 		}
-	
 	}
 	
+	@GetMapping("/logout")
+	public String logout(HttpServletRequest request, HttpServletResponse response) {
+		User user = authentication.authenticate(request);
+		if (user != null) {
+			// Clear session from database
+			user.setSession(null);
+			userRepository.save(user);
+		}
+		
+		// Clear cookie by setting it to expire immediately
+		Cookie cookie = new Cookie("SESSIONID", "");
+		cookie.setPath("/");
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		cookie.setMaxAge(0); // Expire immediately
+		response.addCookie(cookie);
+		
+		return "redirect:/login?loggedout=true";
+	}
 	
 	@GetMapping("/about")
 	public String getAbout() {
 	    return "about";
 	}
-	
-	
-	
-	
-	
-
 
 }

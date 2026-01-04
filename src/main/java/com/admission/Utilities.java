@@ -37,4 +37,18 @@ public class Utilities {
 		return ans;
 	}
 	
+	/**
+	 * Validates email format using a simple regex pattern
+	 * @param email the email to validate
+	 * @return true if email format is valid
+	 */
+	public static boolean isValidEmail(String email) {
+		if (email == null || email.isBlank()) {
+			return false;
+		}
+		// Basic email validation pattern
+		String emailPattern = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+		return email.matches(emailPattern);
+	}
+	
 }

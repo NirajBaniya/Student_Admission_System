@@ -39,8 +39,14 @@ public class StorageController {
 				
 			}
 			
+			// For images and PDFs, allow inline viewing; for other files, force download
+			String disposition = "inline";
+			if (contentType != null && !contentType.startsWith("image/") && !contentType.equals("application/pdf")) {
+				disposition = "attachment";
+			}
+			
 			return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
-					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+					.header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + filename + "\"")
 					.body(resource);
 			
 			

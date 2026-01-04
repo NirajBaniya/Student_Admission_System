@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EduPortal - My Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="eduportal-header">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-mortarboard-fill eduportal-logo-icon"></i>
+                    <span class="eduportal-logo-text">EduPortal</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="me-3">Welcome, <span th:text="${user.firstName}"></span></span>
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    <a th:href="@{/logout}" class="text-decoration-none text-dark">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="eduportal-nav">
+        <div class="container-fluid">
+            <div class="d-flex">
+                <a th:href="@{/dashboard}" class="nav-tab">Browse Colleges</a>
+                <a th:href="@{/applications}" class="nav-tab active">My Applications</a>
+                <a th:href="@{/profile}" class="nav-tab">Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        <!-- Success Message -->
+        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            Application submitted successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <h2 class="applications-heading">Your Applications</h2>
+        
+        <div class="applications-container">
+            <div th:if="${applications.isEmpty()}" class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                <p class="mt-3 text-muted">You haven't submitted any applications yet.</p>
+                <a th:href="@{/dashboard}" class="btn btn-primary mt-3">Browse Colleges</a>
+            </div>
+            
+            <div th:each="app : ${applications}" class="application-item">
+                <div class="application-content">
+                    <h5 class="application-college-name" th:text="${app.college.name}"></h5>
+                    <div class="application-details">
+                        <div class="application-detail-item">
+                            <i class="bi bi-book"></i>
+                            <span th:text="${app.course}"></span>
+                        </div>
+                        <div class="application-detail-item">
+                            <i class="bi bi-clock"></i>
+                            <span>Applied on <span th:text="${#temporals.format(app.appliedDate, 'MM/dd/yyyy')}"></span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="application-status">
+                    <span th:classappend="${app.status.name() == 'PENDING' ? 'status-pending' : 
+                                          (app.status.name() == 'ACCEPTED' ? 'status-accepted' : 'status-rejected')}"
+                          class="status-badge"
+                          th:text="${app.status.name()}"></span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
