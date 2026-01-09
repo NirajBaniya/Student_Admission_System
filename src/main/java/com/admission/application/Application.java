@@ -44,6 +44,8 @@ public class Application {
 	@Enumerated(EnumType.STRING)
 	private ApplicationStatus status;
 	
+	private String adminComment;
+	
 	@CreationTimestamp
 	private java.time.Instant appliedDate;
 	
@@ -105,6 +107,14 @@ public class Application {
 
 	public void setStatus(ApplicationStatus status) {
 		this.status = status;
+	}
+	
+	public String getAdminComment() {
+		return adminComment;
+	}
+
+	public void setAdminComment(String adminComment) {
+		this.adminComment = adminComment;
 	}
 
 	public java.time.Instant getAppliedDate() {

@@ -3,12 +3,12 @@ package com.admission.application;
 import org.springframework.web.multipart.MultipartFile;
 
 public class ApplicationForm {
-	
+
 	private int collegeId;
 	private String course;
 	private String gpa;
 	private MultipartFile documents;
-	
+
 	public ApplicationForm() {
 	}
 
@@ -43,6 +43,5 @@ public class ApplicationForm {
 	public void setDocuments(MultipartFile documents) {
 		this.documents = documents;
 	}
-	
-}
 
+}

@@ -17,25 +17,25 @@ public class DashboardController {
 
 	@Autowired
 	private Authentication authentication;
-	
+
 	@Autowired
 	private CollegeRepository collegeRepository;
 
 	@GetMapping("/dashboard")
 	public String getDashboard(HttpServletRequest request, Model model) {
-		
+
 		User user = authentication.authenticate(request);
 
 		if (user == null) {
 			return "redirect:/login";
 		}
-		
+
 		// Get the single college
 		College college = collegeRepository.getSingleCollege();
-		
+
 		model.addAttribute("user", user);
 		model.addAttribute("college", college);
-		
+
 		return "dashboard.html";
 	}
 

@@ -17,48 +17,48 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "_user")
 public class User {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	
+
 	@Column(nullable = false)
 	private String firstName;
-	
+
 	private String lastName;
-	
+
 	@Column(nullable = false, unique = true)
 	private String username;
-	
+
 	@Column(nullable = false, unique = true)
 	private String email;
-	
+
 	@Column(nullable = false)
 	private String password;
-	
+
 	private String address;
-	
+
 	private String profilePicture;
-	
+
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
-	
+
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private UserType type;
-	
+
 	@Column(unique = true)
 	private String session;
-	
+
 	@CreationTimestamp
 	private Instant createdAt;
-	
+
 	@UpdateTimestamp
 	private Instant updatedAt;
-	
+
 	private Instant lastLoginAt;
-	
+
 	public Instant getLastLoginAt() {
 		return lastLoginAt;
 	}
@@ -173,5 +173,5 @@ public class User {
 	public void setType(UserType type) {
 		this.type = type;
 	}
-	
+
 }

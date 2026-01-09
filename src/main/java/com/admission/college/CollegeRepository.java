@@ -5,11 +5,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CollegeRepository extends JpaRepository<College, Integer> {
-	
-	// Get the single college (assuming only one college exists)
-	default College getSingleCollege() {
-		return findAll().stream().findFirst().orElse(null);
-	}
-	
-}
 
+    // Get the single college (assuming only one college exists)
+    default College getSingleCollege() {
+        return findAll().stream().findFirst().orElse(null);
+    }
+
+}

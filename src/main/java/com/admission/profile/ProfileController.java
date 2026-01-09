@@ -13,12 +13,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import com.admission.application.ApplicationRepository;
 import com.admission.auth.Authentication;
 import com.admission.storage.StorageService;
 import com.admission.user.User;
 import com.admission.user.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 
 @Controller
 public class ProfileController {
@@ -120,8 +122,8 @@ public class ProfileController {
                 } catch (IllegalArgumentException e) {
                     // Handle file validation errors (size, type)
                     logger.warn("File upload validation failed: {}", e.getMessage());
-                    return "redirect:/profile?error=validation&message=" + 
-                           java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+                    return "redirect:/profile?error=validation&message=" +
+                            java.net.URLEncoder.encode(e.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
                 }
             } // end if file uploaded
 
@@ -132,6 +134,43 @@ public class ProfileController {
         } catch (Exception ex) {
             logger.error("Error updating profile for user id: {}", user.getId(), ex);
             return "redirect:/profile?error=server";
+        }
+    }
+
+    @Autowired
+    private com.admission.application.ApplicationRepository applicationRepository;
+
+    @PostMapping("/profile/delete")
+    @Transactional
+    public String deleteProfile(HttpServletRequest request) {
+        User user = authentication.authenticate(request);
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            // Delete user's profile image if it exists
+            if (user.getProfilePicture() != null) {
+                try {
+                    Path path = Paths.get(StorageService.DIRECTORY, user.getProfilePicture());
+                    Files.deleteIfExists(path);
+                } catch (Exception e) {
+                    logger.warn("Failed to delete profile image for user {}: {}", user.getId(), e.getMessage());
+                }
+            }
+
+            // Delete associated applications first
+            applicationRepository.deleteByUser(user);
+
+            // Delete user
+            userRepository.delete(user);
+
+            // Logout
+            return "redirect:/logout";
+
+        } catch (Exception e) {
+            logger.error("Failed to delete profile for user {}", user.getId(), e);
+            return "redirect:/profile?error=delete_failed";
         }
     }
 }
