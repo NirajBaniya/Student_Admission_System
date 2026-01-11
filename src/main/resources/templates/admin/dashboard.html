@@ -81,15 +81,43 @@
             <!-- Left Column - Recent Applications -->
             <div class="col-lg-4">
                 <div class="applications-sidebar">
-                    <h3 class="sidebar-title">Recent Applications</h3>
+                    <h3 class="sidebar-title">Applications</h3>
+
+                    <!-- Search & Filter -->
+                    <form th:action="@{/admin/dashboard}" method="get" class="mb-3">
+                        <div class="input-group mb-2">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" name="search"
+                                placeholder="Search student or course..." th:value="${currentSearch}">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select class="form-select" name="status" onchange="this.form.submit()">
+                                <option value="" th:selected="${currentStatus == null}">All Status</option>
+                                <option value="PENDING"
+                                    th:selected="${currentStatus != null && currentStatus.name() == 'PENDING'}">Pending
+                                </option>
+                                <option value="ACCEPTED"
+                                    th:selected="${currentStatus != null && currentStatus.name() == 'ACCEPTED'}">
+                                    Accepted</option>
+                                <option value="REJECTED"
+                                    th:selected="${currentStatus != null && currentStatus.name() == 'REJECTED'}">
+                                    Rejected</option>
+                            </select>
+                            <a th:if="${currentSearch != null || currentStatus != null}" th:href="@{/admin/dashboard}"
+                                class="btn btn-outline-secondary" title="Clear Filters">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        </div>
+                    </form>
 
                     <div class="applications-list">
-                        <div th:each="app : ${applications}" class="application-list-item"
-                            th:classappend="${selectedApplication != null && selectedApplication.id == app.id ? 'active' : ''}"
-                            th:onclick="'window.location.href=\'/admin/dashboard?applicationId=' + ${app.id} + '\''">
+                        <a th:each="app : ${applications}" 
+                           th:href="@{/admin/dashboard(applicationId=${app.id}, search=${currentSearch}, status=${currentStatus != null ? currentStatus.name() : ''})}"
+                           class="application-list-item text-decoration-none"
+                           th:classappend="${selectedApplication != null && selectedApplication.id == app.id ? 'active' : ''}">
                             <div class="application-list-content">
                                 <p class="application-list-name"
-                                    th:text="${app.user.firstName + ' ' + (app.user.lastName != null ? app.user.lastName : '')}">
+                                    th:text="${app.user != null ? (app.user.firstName + ' ' + (app.user.lastName != null ? app.user.lastName : '')) : 'Unknown User'}">
                                 </p>
                                 <p class="application-list-college" th:text="${app.course}"></p>
                                 <p class="application-list-date"
@@ -97,10 +125,11 @@
                                 </p>
                             </div>
                             <span
-                                th:classappend="${app.status.name() == 'PENDING' ? 'status-badge status-pending' : 
-                                                  (app.status.name() == 'ACCEPTED' ? 'status-badge status-accepted' : 'status-badge status-rejected')}"
-                                class="status-badge" th:text="${app.status.name()}"></span>
-                        </div>
+                                th:classappend="${app.status != null && app.status.name() == 'PENDING' ? 'status-badge status-pending' : 
+                                                  (app.status != null && app.status.name() == 'ACCEPTED' ? 'status-badge status-accepted' : 'status-badge status-rejected')}"
+                                class="status-badge"
+                                th:text="${app.status != null ? app.status.name() : 'UNKNOWN'}"></span>
+                        </a>
                         <div th:if="${applications.isEmpty()}" class="text-center py-5 text-muted">
                             <i class="bi bi-inbox" style="font-size: 3rem;"></i>
                             <p class="mt-3">No applications found</p>
@@ -116,14 +145,18 @@
                     <div class="applicant-header">
                         <div>
                             <h4 class="applicant-name"
-                                th:text="${selectedApplication.user.firstName + ' ' + (selectedApplication.user.lastName != null ? selectedApplication.user.lastName : '')}">
+                                th:text="${selectedApplication.user != null ? (selectedApplication.user.firstName + ' ' + (selectedApplication.user.lastName != null ? selectedApplication.user.lastName : '')) : 'Unknown User'}">
                             </h4>
-                            <p class="applicant-email" th:text="${selectedApplication.user.email}"></p>
+                            <p class="applicant-email"
+                                th:text="${selectedApplication.user != null ? selectedApplication.user.email : 'N/A'}">
+                            </p>
                         </div>
                         <div class="action-buttons">
                             <form th:action="@{/admin/application/{id}/status(id=${selectedApplication.id})}"
                                 method="post" class="d-inline">
                                 <input type="hidden" name="status" value="ACCEPTED">
+                                <input type="hidden" name="search" th:value="${currentSearch}">
+                                <input type="hidden" name="statusFilter" th:value="${currentStatus != null ? currentStatus.name() : ''}">
                                 <button type="submit" class="btn-action btn-accept">
                                     <i class="bi bi-check"></i> Accept
                                 </button>
@@ -131,6 +164,8 @@
                             <form th:action="@{/admin/application/{id}/status(id=${selectedApplication.id})}"
                                 method="post" class="d-inline">
                                 <input type="hidden" name="status" value="REJECTED">
+                                <input type="hidden" name="search" th:value="${currentSearch}">
+                                <input type="hidden" name="statusFilter" th:value="${currentStatus != null ? currentStatus.name() : ''}">
                                 <button type="submit" class="btn-action btn-reject">
                                     <i class="bi bi-x"></i> Reject
                                 </button>
@@ -138,6 +173,8 @@
                             <form th:action="@{/admin/application/{id}/status(id=${selectedApplication.id})}"
                                 method="post" class="d-inline">
                                 <input type="hidden" name="status" value="PENDING">
+                                <input type="hidden" name="search" th:value="${currentSearch}">
+                                <input type="hidden" name="statusFilter" th:value="${currentStatus != null ? currentStatus.name() : ''}">
                                 <button type="submit" class="btn-action btn-pending">
                                     <i class="bi bi-clock"></i> Pending
                                 </button>
@@ -149,7 +186,7 @@
                     <div class="application-info-grid">
                         <div class="info-item">
                             <label>APPLYING FOR</label>
-                            <p th:text="${selectedApplication.college.name}"></p>
+                            <p th:text="${selectedApplication.college != null ? selectedApplication.college.name : 'N/A'}"></p>
                         </div>
                         <div class="info-item">
                             <label>COURSE</label>
@@ -203,6 +240,8 @@
                                     placeholder="Add a note for the applicant"
                                     th:text="${selectedApplication.adminComment}"></textarea>
                             </div>
+                            <input type="hidden" name="search" th:value="${currentSearch}">
+                            <input type="hidden" name="status" th:value="${currentStatus != null ? currentStatus.name() : ''}">
                             <button type="submit" class="btn btn-primary">Save Comment</button>
                         </form>
                     </div>

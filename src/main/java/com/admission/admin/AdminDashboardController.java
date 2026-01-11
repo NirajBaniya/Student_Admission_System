@@ -35,7 +35,9 @@ public class AdminDashboardController {
 	public String getDashboard(
 			HttpServletRequest request,
 			Model model,
-			@RequestParam(required = false) Integer applicationId) {
+			@RequestParam(required = false) Integer applicationId,
+			@RequestParam(required = false) String status,
+			@RequestParam(required = false) String search) {
 
 		User user = authentication.authenticate(request);
 
@@ -48,17 +50,37 @@ public class AdminDashboardController {
 			return "redirect:/dashboard";
 		}
 
-		// Get all applications ordered by date
-		List<Application> applications = applicationRepository.findAllOrderByAppliedDateDesc();
+		// Parse status string to Enum safely
+		ApplicationStatus statusEnum = null;
+		if (status != null && !status.trim().isEmpty()) {
+			try {
+				statusEnum = ApplicationStatus.valueOf(status);
+			} catch (IllegalArgumentException e) {
+				statusEnum = null;
+			}
+		}
 
-		// Calculate statistics
-		long pendingCount = applications.stream()
+		List<Application> applications;
+
+		// Logic to filter/search
+		if (search != null && !search.trim().isEmpty()) {
+			applications = applicationRepository.searchApplications(search.trim());
+		} else if (statusEnum != null) {
+			applications = applicationRepository.findByStatusOrderByAppliedDateDesc(statusEnum);
+		} else {
+			// Get all applications ordered by date
+			applications = applicationRepository.findAllOrderByAppliedDateDesc();
+		}
+
+		// Statistics (Calculate from all applications to keep cards consistent)
+		List<Application> allApplications = applicationRepository.findAllOrderByAppliedDateDesc();
+		long pendingCount = allApplications.stream()
 				.filter(app -> app.getStatus() == ApplicationStatus.PENDING)
 				.count();
-		long acceptedCount = applications.stream()
+		long acceptedCount = allApplications.stream()
 				.filter(app -> app.getStatus() == ApplicationStatus.ACCEPTED)
 				.count();
-		long rejectedCount = applications.stream()
+		long rejectedCount = allApplications.stream()
 				.filter(app -> app.getStatus() == ApplicationStatus.REJECTED)
 				.count();
 
@@ -71,7 +93,12 @@ public class AdminDashboardController {
 			selectedApplication = applications.get(0);
 		}
 
-		com.admission.college.College college = collegeRepository.getSingleCollege();
+		com.admission.college.College college = null;
+		try {
+			college = collegeRepository.getSingleCollege();
+		} catch (Exception e) {
+			// Handle case where college might not exist
+		}
 		model.addAttribute("college", college);
 
 		model.addAttribute("user", user);
@@ -81,6 +108,10 @@ public class AdminDashboardController {
 		model.addAttribute("acceptedCount", acceptedCount);
 		model.addAttribute("rejectedCount", rejectedCount);
 
+		// Models for filter preservation
+		model.addAttribute("currentStatus", statusEnum);
+		model.addAttribute("currentSearch", search);
+
 		return "admin/dashboard.html";
 	}
 
@@ -88,6 +119,8 @@ public class AdminDashboardController {
 	public String updateApplicationStatus(
 			@PathVariable int id,
 			@RequestParam ApplicationStatus status,
+			@RequestParam(required = false) String search,
+			@RequestParam(required = false) String statusFilter,
 			HttpServletRequest request) {
 
 		User user = authentication.authenticate(request);
@@ -102,13 +135,23 @@ public class AdminDashboardController {
 			applicationRepository.save(application);
 		}
 
-		return "redirect:/admin/dashboard?applicationId=" + id;
+		// Preserve filters in redirect
+		StringBuilder redirectUrl = new StringBuilder("/admin/dashboard?applicationId=" + id);
+		if (search != null && !search.trim().isEmpty()) {
+			redirectUrl.append("&search=").append(search);
+		}
+		if (statusFilter != null && !statusFilter.trim().isEmpty()) {
+			redirectUrl.append("&status=").append(statusFilter);
+		}
+		return "redirect:" + redirectUrl.toString();
 	}
 
 	@PostMapping("/admin/application/{id}/comment")
 	public String updateApplicationComment(
 			@PathVariable int id,
 			@RequestParam(required = false) String comment,
+			@RequestParam(required = false) String search,
+			@RequestParam(required = false) String status,
 			HttpServletRequest request) {
 
 		User user = authentication.authenticate(request);
@@ -119,11 +162,19 @@ public class AdminDashboardController {
 
 		Application application = applicationRepository.findById(id).orElse(null);
 		if (application != null) {
-			application.setAdminComment(comment);
+			application.setAdminComment(comment != null ? comment.trim() : null);
 			applicationRepository.save(application);
 		}
 
-		return "redirect:/admin/dashboard?applicationId=" + id;
+		// Preserve filters in redirect
+		StringBuilder redirectUrl = new StringBuilder("/admin/dashboard?applicationId=" + id);
+		if (search != null && !search.trim().isEmpty()) {
+			redirectUrl.append("&search=").append(search);
+		}
+		if (status != null && !status.trim().isEmpty()) {
+			redirectUrl.append("&status=").append(status);
+		}
+		return "redirect:" + redirectUrl.toString();
 	}
 
 	// --- Course Management ---
