@@ -21,6 +21,7 @@ public class CollegeDataInitializer implements CommandLineRunner {
 			college.setLocation("San Francisco, CA");
 			college.setCostPerYear(5000);
 			college.setFoundedYear(1920);
+			college.setImagePath("collegeImage.jpg");
 			college.setDescription(
 					"Founded in 1920, Tech University of Innovation has consistently ranked among the top 1% of universities worldwide. Our campus spans 150 acres of state-of-the-art facilities, including the famous Turing AI Research Lab and the Bohr Physics Center. We believe in a holistic approach to education, combining rigorous academics with industry-aligned practical training.");
 			college.setCourses(Arrays.asList(
@@ -37,6 +38,13 @@ public class CollegeDataInitializer implements CommandLineRunner {
 					"Student Innovation Hub",
 					"Modern Medical Center"));
 			collegeRepository.save(college);
+		} else {
+			// Force update image path for all existing colleges to ensure it shows up
+			java.util.List<College> colleges = collegeRepository.findAll();
+			for (College c : colleges) {
+				c.setImagePath("collegeImage.jpg");
+				collegeRepository.save(c);
+			}
 		}
 	}
 }
