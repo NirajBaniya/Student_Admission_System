@@ -45,10 +45,10 @@
             <div class="col-md-6">
                 <div class="card p-4 shadow-lg border-0 rounded-4 text-center">
                     <img th:if="${user.profilePicture == null}" th:src="@{/images/profile.jpeg}"
-                        class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                        class="rounded-circle mb-3 mx-auto d-block" width="150" height="150" style="object-fit: cover;">
 
                     <img th:if="${user.profilePicture != null}" th:src="@{/uploads/{file}(file=${user.profilePicture})}"
-                        class="rounded-circle mb-3" width="150" height="150" style="object-fit: cover;">
+                        class="rounded-circle mb-3 mx-auto d-block" width="150" height="150" style="object-fit: cover;">
 
                     <h3 th:text="${user.firstName + ' ' + (user.lastName != null ? user.lastName : '')}"></h3>
                     <hr>

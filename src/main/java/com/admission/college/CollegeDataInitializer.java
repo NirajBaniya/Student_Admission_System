@@ -19,26 +19,24 @@ public class CollegeDataInitializer implements CommandLineRunner {
 			College college = new College();
 			college.setName("Tech University of Innovation");
 			college.setLocation("San Francisco, CA");
-			college.setCostPerYear(45000);
+			college.setCostPerYear(5000);
 			college.setFoundedYear(1920);
-			college.setDescription("Founded in 1920, Tech University of Innovation has consistently ranked among the top 1% of universities worldwide. Our campus spans 150 acres of state-of-the-art facilities, including the famous Turing AI Research Lab and the Bohr Physics Center. We believe in a holistic approach to education, combining rigorous academics with industry-aligned practical training.");
+			college.setDescription(
+					"Founded in 1920, Tech University of Innovation has consistently ranked among the top 1% of universities worldwide. Our campus spans 150 acres of state-of-the-art facilities, including the famous Turing AI Research Lab and the Bohr Physics Center. We believe in a holistic approach to education, combining rigorous academics with industry-aligned practical training.");
 			college.setCourses(Arrays.asList(
-				"B.Tech Computer Science & AI",
-				"B.Sc Data Science",
-				"M.Sc Artificial Intelligence",
-				"B.Tech Information Technology",
-				"M.Sc Cybersecurity"
-			));
+					"B.Tech Computer Science & AI",
+					"B.Sc Data Science",
+					"M.Sc Artificial Intelligence",
+					"B.Tech Information Technology",
+					"M.Sc Cybersecurity"));
 			college.setFeatures(Arrays.asList(
-				"24/7 Digital Library",
-				"High-Performance Computing Center",
-				"Olympic-sized Swimming Pool",
-				"On-campus Residential Housing",
-				"Student Innovation Hub",
-				"Modern Medical Center"
-			));
+					"24/7 Digital Library",
+					"High-Performance Computing Center",
+					"Olympic-sized Swimming Pool",
+					"On-campus Residential Housing",
+					"Student Innovation Hub",
+					"Modern Medical Center"));
 			collegeRepository.save(college);
 		}
 	}
 }
-
